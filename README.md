@@ -2,6 +2,10 @@
 
 A web application that parses Indian bank statement PDFs into structured Excel sheets.
 
+## Deploy to Render (One Click)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/atul0016/bank-statement-parser)
+
 ## Supported Banks
 - **SBI** Bank & Credit Card
 - **HDFC** Bank & Credit Card
