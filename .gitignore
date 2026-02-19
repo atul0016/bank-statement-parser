@@ -1,0 +1,28 @@
+# Dependencies
+.venv/
+__pycache__/
+*.pyc
+
+# Debug/test files
+debug_*.py
+test_*.py
+
+# Upload/output folders (keep structure)
+uploads/*
+outputs/*
+!uploads/.gitkeep
+!outputs/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Bank statements (sensitive data)
+DIRECTOR's Bank Statements/
+
+# Env
+.env

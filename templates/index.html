@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Statement Parser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0 20px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: #60a5fa;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .upload-section {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(96, 165, 250, 0.4);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .upload-area svg {
+            width: 48px;
+            height: 48px;
+            fill: #60a5fa;
+            margin-bottom: 15px;
+        }
+
+        .upload-area h3 {
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .password-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            align-items: center;
+        }
+
+        .password-row label {
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
+        .password-row input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            max-width: 300px;
+        }
+
+        .password-row input:focus {
+            outline: none;
+            border-color: #60a5fa;
+        }
+
+        .btn {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #047857, #059669);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .file-name {
+            color: #60a5fa;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .status.loading {
+            display: block;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .status.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        .results-section {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .results-header h2 {
+            color: #60a5fa;
+        }
+
+        .results-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .info-badge {
+            background: rgba(96, 165, 250, 0.15);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #93c5fd;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid rgba(96, 165, 250, 0.15);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        th {
+            background: rgba(37, 99, 235, 0.3);
+            color: #93c5fd;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(96, 165, 250, 0.1);
+            color: #cbd5e1;
+        }
+
+        tr:hover td {
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        td.debit {
+            color: #f87171;
+            font-weight: 500;
+        }
+
+        td.credit {
+            color: #34d399;
+            font-weight: 500;
+        }
+
+        td.balance {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(147, 197, 253, 0.3);
+            border-top: 3px solid #93c5fd;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(96, 165, 250, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .summary-card .label {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .summary-card .value.debit-color { color: #f87171; }
+        .summary-card .value.credit-color { color: #34d399; }
+        .summary-card .value.balance-color { color: #60a5fa; }
+        .summary-card .value.count-color { color: #a78bfa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Bank Statement Parser</h1>
+            <p>Upload bank statement PDFs and convert them to structured Excel sheets</p>
+            <p style="color: #64748b; margin-top: 5px; font-size: 0.85rem;">
+                Supports: SBI Bank/Credit, HDFC Bank/Credit, Yes Bank/Credit, IndusInd Credit, RBL Bank/Credit, Standard Chartered, One Card
+            </p>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><polyline points="14 2 14 8 20 8" fill="none" stroke="currentColor" stroke-width="0.5"/><line x1="12" y1="18" x2="12" y2="12" stroke="white" stroke-width="1.5"/><polyline points="9 15 12 12 15 15" fill="none" stroke="white" stroke-width="1.5"/></svg>
+                <h3>Drop PDF here or click to upload</h3>
+                <p>Supports all major Indian bank statement formats</p>
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept=".pdf">
+
+            <div class="password-row">
+                <label for="password">PDF Password (if protected):</label>
+                <input type="password" id="password" placeholder="Leave blank if not protected">
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="parseBtn" disabled>Parse Statement</button>
+                <button class="btn btn-success" id="downloadBtn" style="display:none;">Download Excel</button>
+                <span class="file-name" id="fileName"></span>
+            </div>
+
+            <div class="status" id="status"></div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 id="bankTypeLabel">Parsed Results</h2>
+                <div class="results-info">
+                    <span class="info-badge" id="txnCount"></span>
+                    <span class="info-badge" id="sourceFile"></span>
+                </div>
+            </div>
+
+            <div class="summary-cards" id="summaryCards"></div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                            <th>Running Balance</th>
+                            <th>Ledger</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const parseBtn = document.getElementById('parseBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const fileName = document.getElementById('fileName');
+        const status = document.getElementById('status');
+        const resultsSection = document.getElementById('resultsSection');
+        const tableBody = document.getElementById('tableBody');
+        const bankTypeLabel = document.getElementById('bankTypeLabel');
+        const txnCount = document.getElementById('txnCount');
+        const sourceFile = document.getElementById('sourceFile');
+        const summaryCards = document.getElementById('summaryCards');
+
+        let currentData = null;
+
+        // Drag and drop
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            if (fileInput.files.length) {
+                const file = fileInput.files[0];
+                fileName.textContent = file.name;
+                parseBtn.disabled = false;
+                downloadBtn.style.display = 'none';
+                resultsSection.style.display = 'none';
+            }
+        }
+
+        parseBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const password = document.getElementById('password').value;
+
+            parseBtn.disabled = true;
+            status.className = 'status loading';
+            status.innerHTML = '<span class="spinner"></span> Parsing bank statement...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            if (password) formData.append('password', password);
+
+            try {
+                const resp = await fetch('/parse', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    throw new Error(data.error || 'Failed to parse PDF');
+                }
+
+                currentData = data;
+                displayResults(data);
+
+                status.className = 'status success';
+                status.textContent = `Successfully parsed ${data.transactions.length} transactions from ${data.bank_type}`;
+                downloadBtn.style.display = 'inline-block';
+
+            } catch (err) {
+                status.className = 'status error';
+                status.textContent = err.message;
+            } finally {
+                parseBtn.disabled = false;
+            }
+        });
+
+        downloadBtn.addEventListener('click', async () => {
+            if (!currentData) return;
+
+            downloadBtn.disabled = true;
+
+            try {
+                const resp = await fetch('/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        transactions: currentData.transactions,
+                        filename: currentData.filename,
+                        bank_type: currentData.bank_type
+                    })
+                });
+
+                if (!resp.ok) throw new Error('Export failed');
+
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentData.filename.replace('.pdf', '_parsed.xlsx').replace('.PDF', '_parsed.xlsx');
+                a.click();
+                URL.revokeObjectURL(url);
+
+            } catch (err) {
+                status.className = 'status error';
+                status.textContent = err.message;
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            const txns = data.transactions;
+
+            bankTypeLabel.textContent = `${data.bank_type} - Parsed Results`;
+            txnCount.textContent = `${txns.length} transactions`;
+            sourceFile.textContent = data.filename;
+
+            // Summary
+            let totalDebit = 0, totalCredit = 0;
+            txns.forEach(t => {
+                totalDebit += parseFloat(String(t.debit || 0).replace(/,/g, '')) || 0;
+                totalCredit += parseFloat(String(t.credit || 0).replace(/,/g, '')) || 0;
+            });
+
+            const lastBalance = txns.length > 0 ? txns[txns.length - 1].balance : '';
+
+            summaryCards.innerHTML = `
+                <div class="summary-card">
+                    <div class="label">Total Transactions</div>
+                    <div class="value count-color">${txns.length}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Debit</div>
+                    <div class="value debit-color">₹${formatNumber(totalDebit)}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Credit</div>
+                    <div class="value credit-color">₹${formatNumber(totalCredit)}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Closing Balance</div>
+                    <div class="value balance-color">${lastBalance ? '₹' + formatNumber(parseFloat(String(lastBalance).replace(/,/g, ''))) : 'N/A'}</div>
+                </div>
+            `;
+
+            // Table
+            tableBody.innerHTML = '';
+            txns.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${t.serial || ''}</td>
+                    <td>${t.date || ''}</td>
+                    <td>${escapeHtml(t.description || '')}</td>
+                    <td class="debit">${t.debit ? formatNumber(parseFloat(String(t.debit).replace(/,/g, ''))) : ''}</td>
+                    <td class="credit">${t.credit ? formatNumber(parseFloat(String(t.credit).replace(/,/g, ''))) : ''}</td>
+                    <td class="balance">${t.balance !== '' && t.balance !== null ? formatNumber(parseFloat(String(t.balance).replace(/,/g, ''))) : ''}</td>
+                    <td>${escapeHtml(t.ledger || '')}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            resultsSection.style.display = 'block';
+        }
+
+        function formatNumber(num) {
+            if (isNaN(num)) return '';
+            return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
