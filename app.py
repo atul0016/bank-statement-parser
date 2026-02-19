@@ -10,9 +10,15 @@ import json
 
 app = Flask(__name__)
 CORS(app)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
-OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), 'outputs')
+# Use /tmp on Render (read-only filesystem outside /tmp)
+if os.environ.get('RENDER'):
+    UPLOAD_FOLDER = '/tmp/uploads'
+    OUTPUT_FOLDER = '/tmp/outputs'
+else:
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+    OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), 'outputs')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
